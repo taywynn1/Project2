@@ -1,7 +1,7 @@
 ## SI 206 W17 - Project 2
 
 ## COMMENT HERE WITH:
-## Your name:
+## Your name: Taylor Wynn
 ## Anyone you worked with on this project:
 
 ## Below we have provided import statements, comments to separate out the 
@@ -11,9 +11,12 @@
 
 ## Import statements
 import unittest
+from urllib.request import urlopen
 import requests
 import re
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
 
 
 ## Part 1 -- Define your find_urls function here.
@@ -27,10 +30,16 @@ from bs4 import BeautifulSoup
 ## find_urls("the internet is awesome #worldwideweb") should return [], empty list
 
 def find_urls(s):
-    pass
-    #Your code here
-
-
+    l = list()
+    words = s.split()
+    for word in words:
+        sites = re.findall('^[A-Za-z]\S+://[A-Za-z]\S+.[A-Za-z]\S+',word)
+        #print(sites)
+        if len(sites) < 1:
+            continue
+        websites = sites[0]
+        l.append(websites)
+    return l
 
 ## PART 2  - Define a function grab_headlines.
 ## INPUT: N/A. No input.
@@ -38,9 +47,17 @@ def find_urls(s):
 ## http://www.michigandaily.com/section/opinion
 
 def grab_headlines():
-    pass
-    #Your code here
-
+    #url = 'http://www.michigandaily.com/section/opinion'
+    #html = urlopen(url).read()
+    fname = open('opinion.html', 'r')
+    soup = BeautifulSoup(fname, "html.parser")
+    l = list()
+    div = soup.find('div', attrs = {'class': 'view view-most-read view-id-most_read view-display-id-panel_pane_1 view-dom-id-99658157999dd0ac5aa62c2b284dd266'})
+    links = div.find_all('a')
+    for each in links:
+        headline = each.string
+        l.append(headline)
+    return(l)
 
 
 ## PART 3 (a) Define a function called get_umsi_data.  It should create a dictionary
@@ -55,15 +72,37 @@ def grab_headlines():
 ## requests.get(base_url, headers={'User-Agent': 'SI_CLASS'}) 
 
 def get_umsi_data():
-    pass
-    #Your code here
+    umsi_titles = {}
+    count = 13
+    all_names = list()
+    all_titles = list()
+    for number in range(count):
+        base_url = 'https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page={}'.format(number)
+        request = requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
+        html = request.text
+        soup = BeautifulSoup(html, "html.parser")
+        listnames = soup.find_all('div', attrs = {'class': 'field-item even', 'property': 'dc:title'})
+        listtitles = soup.find_all('div', attrs = {'class': 'field field-name-field-person-titles field-type-text field-label-hidden'})
+        for titles in listtitles:
+            title = str(titles.div.string)
+            all_titles.append(title)
+        for names in listnames:
+            name = str(names.h2.string)
+            all_names.append(name)
+        for each in all_names:
+            umsi_titles[each] = ''
+        umsi_titles = dict(zip(all_names, all_titles))
+    return umsi_titles
 
 ## PART 3 (b) Define a function called num_students.  
 ## INPUT: The dictionary from get_umsi_data().
 ## OUTPUT: Return number of PhD students in the data.  (Don't forget, I may change the input data)
 def num_students(data):
-    pass
-    #Your code here
+    number = 0
+    for students in data:
+        if data[students] == 'PhD student':
+            number += 1
+    return number
 
 
 
